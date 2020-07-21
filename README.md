@@ -2,9 +2,11 @@
 a Role and Resource Based Access Control implementation in golang
 
 ![ci](https://github.com/jacexh/rbac/workflows/ci/badge.svg)
+[![codecov](https://codecov.io/gh/jacexh/rbac/branch/master/graph/badge.svg)](https://codecov.io/gh/jacexh/rbac)
 
 
-## Install
+
+## Installation
 
 ```
 go get github.com/jacexh/rbac
