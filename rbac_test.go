@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"encoding/json"
 	"log"
 	"sync/atomic"
 	"testing"
@@ -45,6 +46,45 @@ func TestRemoveRole(t *testing.T) {
 
 	rbac.RemoveRole(qa.ID())
 	if _, err := rbac.Permit(qa.ID(), "github", PermissionGet); err == nil {
+		t.FailNow()
+	}
+}
+
+func TestRBACMarshalJSON(t *testing.T) {
+	rbac := NewRBAC()
+	qa := NewSimpleRole("qa")
+	err := qa.Grant(NewSimpleResource("github"), PermissionGet)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//dev := NewSimpleRole("dev")
+
+	err = rbac.RegisterRole(qa)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data, err := json.Marshal(rbac)
+	if err != nil {
+		t.FailNow()
+	}
+	log.Println(string(data))
+}
+
+func TestRBAC_UnmarshalJSON(t *testing.T) {
+	rbac := new(RBAC)
+	data := []byte(`{"qa":{"github":["get"]}, "dev":{"github": ["create", "get"]}}`)
+
+	err := json.Unmarshal(data, rbac)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if ok, _ := rbac.Permit("qa", "github", PermissionGet); !ok {
+		t.FailNow()
+	}
+
+	if ok, _ := rbac.Permit("dev", "github", PermissionCreate); !ok {
 		t.FailNow()
 	}
 }

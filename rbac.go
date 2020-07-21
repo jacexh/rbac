@@ -1,14 +1,17 @@
 package rbac
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 )
 
 type (
 	RBAC struct {
-		roles map[RoleID]Role
-		mu    sync.RWMutex
+		roles        map[RoleID]Role
+		RoleImpl     func(RoleID) Role
+		ResourceImpl func(ResourceID) Resource
+		mu           sync.RWMutex
 	}
 )
 
@@ -46,4 +49,46 @@ func (rbac *RBAC) Permit(rid RoleID, resID ResourceID, perm Permission) (bool, e
 		return false, errors.New("role not found")
 	}
 	return role.Permit(resID, perm), nil
+}
+
+func (rbac *RBAC) MarshalJSON() ([]byte, error) {
+	ret := make(map[RoleID]map[ResourceID][]Permission)
+	rbac.mu.RLock()
+	for _, role := range rbac.roles {
+		ret[role.ID()] = role.Permissions()
+	}
+	rbac.mu.RUnlock()
+	return json.Marshal(ret)
+}
+
+func (rbac *RBAC) UnmarshalJSON(data []byte) error {
+	ret := make(map[RoleID]map[ResourceID][]Permission)
+	if err := json.Unmarshal(data, &ret); err != nil {
+		return err
+	}
+
+	if rbac.RoleImpl == nil {
+		rbac.RoleImpl = NewSimpleRole
+	}
+	if rbac.ResourceImpl == nil {
+		rbac.ResourceImpl = NewSimpleResource
+	}
+
+	rbac.mu.Lock()
+	rbac.roles = make(map[RoleID]Role)
+	rbac.mu.Unlock()
+
+	for rid, permissions := range ret {
+		role := rbac.RoleImpl(rid)
+		for resID, perms := range permissions {
+			res := rbac.ResourceImpl(resID)
+			if err := role.Grant(res, perms...); err != nil {
+				return err
+			}
+		}
+		if err := rbac.RegisterRole(role); err != nil {
+			return err
+		}
+	}
+	return nil
 }

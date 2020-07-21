@@ -14,9 +14,9 @@ type (
 	}
 )
 
-func NewSimpleRole(name string) *SimpleRole {
+func NewSimpleRole(id RoleID) Role {
 	return &SimpleRole{
-		name:        RoleID(name),
+		name:        id,
 		permissions: map[ResourceID]map[Permission]struct{}{},
 		resources:   map[ResourceID]Resource{},
 	}

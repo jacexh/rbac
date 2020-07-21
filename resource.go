@@ -6,9 +6,9 @@ type (
 	}
 )
 
-func NewSimpleResource(id string) *SimpleResource {
+func NewSimpleResource(id ResourceID) Resource {
 	return &SimpleResource{
-		id: ResourceID(id),
+		id: id,
 	}
 }
 
