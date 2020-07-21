@@ -72,6 +72,24 @@ func TestRoleDeny(t *testing.T) {
 	}
 }
 
+func TestRoleDenyAll(t *testing.T) {
+	var role Role
+	role = NewSimpleRole("developer")
+	github := NewSimpleResource("github")
+	err := role.Grant(github, PermissionCreate, PermissionGet)
+	if err != nil {
+		t.FailNow()
+	}
+
+	role.Deny(github.ID(), PermissionCreate, PermissionGet)
+	if role.Permit(github.ID(), PermissionGet) {
+		t.FailNow()
+	}
+	if role.Permit(github.ID(), PermissionCreate) {
+		t.FailNow()
+	}
+}
+
 func TestRolePermissions(t *testing.T) {
 	var role Role
 	role = NewSimpleRole("developer")
