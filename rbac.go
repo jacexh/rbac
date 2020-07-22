@@ -7,6 +7,7 @@ import (
 )
 
 type (
+	// RBAC Role&&Role Based Access Control Model
 	RBAC struct {
 		roles        map[RoleID]Role
 		RoleImpl     func(RoleID) Role
@@ -15,10 +16,12 @@ type (
 	}
 )
 
+// NewRBAC RBAC Factory method
 func NewRBAC() *RBAC {
 	return &RBAC{roles: map[RoleID]Role{}}
 }
 
+// RegisterRole add new role to rbac
 func (rbac *RBAC) RegisterRole(role Role) error {
 	if role.ID() == "" {
 		return errors.New("bad role id")
@@ -33,6 +36,7 @@ func (rbac *RBAC) RegisterRole(role Role) error {
 	return nil
 }
 
+// RemoveRole remove role by id
 func (rbac *RBAC) RemoveRole(rid RoleID) {
 	rbac.mu.Lock()
 	defer rbac.mu.Unlock()
@@ -40,6 +44,7 @@ func (rbac *RBAC) RemoveRole(rid RoleID) {
 	delete(rbac.roles, rid)
 }
 
+// Permit retrue ture or false that this role got the permission of resource
 func (rbac *RBAC) Permit(rid RoleID, resID ResourceID, perm Permission) (bool, error) {
 	rbac.mu.RLock()
 	role, exists := rbac.roles[rid]
@@ -51,6 +56,7 @@ func (rbac *RBAC) Permit(rid RoleID, resID ResourceID, perm Permission) (bool, e
 	return role.Permit(resID, perm), nil
 }
 
+// MarshalJSON implement of json.Marshaller
 func (rbac *RBAC) MarshalJSON() ([]byte, error) {
 	ret := make(map[RoleID]map[ResourceID][]Permission)
 	rbac.mu.RLock()
@@ -61,6 +67,7 @@ func (rbac *RBAC) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ret)
 }
 
+// UnmarshalJSON implement of json.Unmarshaller
 func (rbac *RBAC) UnmarshalJSON(data []byte) error {
 	ret := make(map[RoleID]map[ResourceID][]Permission)
 	if err := json.Unmarshal(data, &ret); err != nil {

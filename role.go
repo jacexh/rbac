@@ -6,6 +6,7 @@ import (
 )
 
 type (
+	// SimpleRole a simple role implement of Role interface
 	SimpleRole struct {
 		name        RoleID
 		permissions map[ResourceID]map[Permission]struct{}
@@ -14,6 +15,7 @@ type (
 	}
 )
 
+// NewSimpleRole factory method of SimpleRole
 func NewSimpleRole(id RoleID) Role {
 	return &SimpleRole{
 		name:        id,
@@ -22,10 +24,12 @@ func NewSimpleRole(id RoleID) Role {
 	}
 }
 
+// ID return role id
 func (role *SimpleRole) ID() RoleID {
 	return role.name
 }
 
+// Grant grant these permissions to the resource
 func (role *SimpleRole) Grant(res Resource, permissions ...Permission) error {
 	if res.ID() == "" {
 		return errors.New("bad resource id")
@@ -46,6 +50,7 @@ func (role *SimpleRole) Grant(res Resource, permissions ...Permission) error {
 	return nil
 }
 
+// Deny remove these permissions from the resource
 func (role *SimpleRole) Deny(rid ResourceID, permissions ...Permission) {
 	role.mu.Lock()
 	defer role.mu.Unlock()
@@ -71,6 +76,7 @@ func (role *SimpleRole) Deny(rid ResourceID, permissions ...Permission) {
 	return
 }
 
+// Permissions return all permissions granted to the role
 func (role *SimpleRole) Permissions() map[ResourceID][]Permission {
 	role.mu.RLock()
 	defer role.mu.RUnlock()
@@ -87,6 +93,7 @@ func (role *SimpleRole) Permissions() map[ResourceID][]Permission {
 	return ret
 }
 
+// Permit check if role granted the permission of resource
 func (role *SimpleRole) Permit(res ResourceID, per Permission) bool {
 	role.mu.RLock()
 	defer role.mu.RUnlock()
