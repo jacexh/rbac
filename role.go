@@ -79,7 +79,7 @@ func (role *SimpleRole) Permissions() map[ResourceID][]Permission {
 	for rid, res := range role.permissions {
 		ret[rid] = make([]Permission, len(res))
 		index := 0
-		for perm, _ := range res {
+		for perm := range res {
 			ret[rid][index] = perm
 			index++
 		}
